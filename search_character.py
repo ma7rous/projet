@@ -71,17 +71,17 @@ for i in range(width):
                 numero_charactere+=1
                 M[i,j]=int(numero_charactere)
 
-caractere_double=[]
+caractere_double=[] #deux tags sont equivalents
 
 for i in range(1,width-1):
     for j in range(1,height-1):
         if M[i,j]!=0:
             a=M[i,j]
-            if M[i,j-1]!=0 and M[i,j-1]!=a and (min(a,M[i,j-1]),max(a,M[i,j-1])) not in caractere_double:
-                caractere_double.append((min(a,M[i,j-1]),max(a,M[i,j-1])))
-            elif M[i-1,j-1]!=0 and M[i-1,j-1]!=a and(min(a,M[i-1,j-1]),max(a,M[i-1,j-1])) not in caractere_double:
-                caractere_double.append((min(a,M[i-1,j-1]),max(a,M[i-1,j-1])))
-            elif M[i-1,j]!=0 and M[i-1,j]!=a and(min(a,M[i-1,j]),max(a,M[i-1,j])) not in caractere_double:
-                caractere_double.append((min(a,M[i-1,j]),max(a,M[i-1,j])))
+            if M[i,j-1]!=0 and M[i,j-1]!=a and [min(a,M[i,j-1]),max(a,M[i,j-1])] not in caractere_double:
+                caractere_double.append([min(a,M[i,j-1]),max(a,M[i,j-1])])
+            elif M[i-1,j-1]!=0 and M[i-1,j-1]!=a and[min(a,M[i-1,j-1]),max(a,M[i-1,j-1])] not in caractere_double:
+                caractere_double.append([min(a,M[i-1,j-1]),max(a,M[i-1,j-1])])
+            elif M[i-1,j]!=0 and M[i-1,j]!=a and[min(a,M[i-1,j]),max(a,M[i-1,j])] not in caractere_double:
+                caractere_double.append([min(a,M[i-1,j]),max(a,M[i-1,j])])
 
 
