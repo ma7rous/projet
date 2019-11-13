@@ -18,13 +18,13 @@ def convMatrice(image):
     
     Argument: image--> une image, en noir et blanc, lue par le biais de la bibliothèque PIL.
     '''
-    global width, height
-    width, height = image.size
-    M=np.zeros((width, height), dtype=np.uint8)
+    global largeur, hauteur
+    hauteur, largeur = image.size
+    M=np.zeros((largeur, hauteur), dtype=np.uint8)
     nbr_charactere=0
-    for i in range(width):
-        for j in range(height):
-            if img.getpixel((i,j))[0] < 100:
+    for i in range(largeur):
+        for j in range(hauteur):
+            if img.getpixel((j,i))[0] < 100:
                 if M[i,j-1]!=0: M[i,j]=M[i,j-1]
                 elif M[i-1,j-1]!=0: M[i,j]=M[i-1,j-1]
                 elif M[i-1,j]!=0: M[i,j]=M[i-1,j]
@@ -39,8 +39,8 @@ def ebaucheSametag(M):
     Argument: M--> matrice contenant des entiers (un élément nul correspond à un pixel blanc).
     '''
     pair_liste=[]
-    for i in range(1, width-1):
-        for j in range(1,height-1):
+    for i in range(1, largeur-1):
+        for j in range(1,hauteur-1):
             if M[i,j]!=0:
                 tag=M[i,j]
                 voisins=[ M[i,j-1], M[i-1,j-1], M[i-1,j] ]
@@ -130,11 +130,11 @@ def MemeTag(pair_liste):
 
 def matriceTague(M, tag_liste):
     n=len(tag_liste)
-    position_caracteres=[[width,-1,height,-1]]*n
+    position_caracteres=[[largeur,-1,hauteur,-1] for i in range(n)]
     #liste de la forme [[i1_min, i1_max, j1_min, j1_max], ..., [in_min, in_max, jn_min, jn_max]] avec 1,...,n les différennts caractères
     nombre_pixels=[0]*n
-    for i in range(width):
-        for j in range(height):
+    for i in range(largeur):
+        for j in range(hauteur):
             if M[i,j]!=0:
                 for k in range(n):
                     if M[i,j] in tag_liste[k]:
@@ -153,6 +153,9 @@ def afficheListeTag(image):
     tag_liste = MemeTag(pair_liste)
     position_caracteres, nombre_pixels = matriceTague(M, tag_liste)
     print(position_caracteres, nombre_pixels)
+    M=M*255#/len(nombre_pixels)
+    a=Image.fromarray(M)
+    a.show()
 
 #def afficheListeTag_bis(image):
 #    M=convMatrice(image)
@@ -168,10 +171,12 @@ def afficheListeTag(image):
 ##################################################
 #                     Main                       #
 ##################################################
-img = Image.open('sample.png') # The image file must exist in the same directory as the script
+img = Image.open('Capture3.png') # The image file must exist in the same directory as the script
 img=img.convert('LA')
 
 afficheListeTag(img) 
+
+
 
 
                   
