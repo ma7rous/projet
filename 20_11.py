@@ -24,7 +24,7 @@ def convMatrice(image):
     nbr_tag=0
     for i in range(ligne):
         for j in range(colonne):
-            if img.getpixel((j,i))[0] < 100:
+            if img.getpixel((j,i)) < 100:
                 if M[i,j-1]!=0: M[i,j]=M[i,j-1]
                 elif M[i-1,j-1]!=0: M[i,j]=M[i-1,j-1]
                 elif M[i-1,j]!=0: M[i,j]=M[i-1,j]
@@ -164,11 +164,11 @@ def matriceTague(M, tag_liste):
     return position_caracteres, nombre_pixels
 
 
-def sauvergarder_regions(image, M, position_caracteres, nom_position='regions.txt', nom_image="Charactère_", format='.jpg'):
+def sauvergarder_regions(image, M, position_caracteres, nom_position='regions.txt', nom_image="Charactère_", format='.PNG'):
     fichier=open(nom_position,'w')
     for k in range(len(position_caracteres)):
         imin, jmin = position_caracteres[k][0], position_caracteres[k][2]
-        img = image.crop((jmin-1, imin-1, position_caracteres[k][3]+1, position_caracteres[k][1]+1))
+        img = image.crop((jmin-1, imin-1, position_caracteres[k,3]+1, position_caracteres[k,1]+1)) #gauche haut droite bas
         img.save(nom_image+str(k+1)+format)
         img.show()
         string = str(imin)+'; '+ str(jmin)
@@ -206,8 +206,8 @@ def afficheListeTag(image):
 ##################################################
 #                     Main                       #
 ##################################################
-img = Image.open('test2.png') # The image file must exist in the same directory as the script
-
+img = Image.open('blanc.png') # The image file must exist in the same directory as the script
+img = img.convert('1')
 afficheListeTag(img) 
 #Image.fromarray()
 #img.save('')
