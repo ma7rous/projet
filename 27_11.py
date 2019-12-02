@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw
 #                   Fonctions                   #
 #################################################
 
-def convMatrice(image):
+def image2np(image):
     '''Convertie une image en noir et blanc en une matrice M.
     Renvoie cette matrice M et la valeur maximale nbr_tag que prend M[i,j].
     M[i,j]=0 correspond à un pixel blanc et M[i,j]!=0 correspond à un pixel noir.
@@ -33,28 +33,28 @@ def convMatrice(image):
                     M[i,j]=int(nbr_tag)
     return M, nbr_tag
 
-def ebaucheMemeTag(M):
-    '''Renvoie une liste pair_liste de sous-listes à deux éléments correspondant à deux tags voisins de la matrice tagué M.
-    
-    Argument: M--> matrice contenant des entiers (un élément nul correspond à un pixel blanc).
-    '''
-    ligne, colonne = np.shape(M)
-    pair_liste=[]
-    for i in range(1, ligne-1):
-        for j in range(1,colonne-1):
-            if M[i,j]!=0:
-                tag=M[i,j]
-                voisins=[ M[i,j-1], M[i-1,j-1], M[i-1,j] ]
-                if voisins[0]!=0 and voisins[0]!=tag and [ min( tag, voisins[0] ), max( tag, voisins[0] )] not in pair_liste:
-                    pair_liste.append( [min( tag, voisins[0] ), max( tag, voisins[0] )] )
-                
-                elif voisins[1]!=0 and voisins[1]!=tag and [ min( tag, voisins[1] ), max( tag, voisins[1] )] not in pair_liste:
-                    pair_liste.append( [min( tag, voisins[1] ), max( tag, voisins[1] )] )
-                
-                elif voisins[2]!=0 and voisins[2]!=tag and [ min( tag, voisins[2] ), max( tag, voisins[2] )] not in pair_liste:
-                    pair_liste.append( [min( tag, voisins[2] ), max( tag, voisins[2] )] )
-                
-    return pair_liste
+#def f(M):
+#    '''Renvoie une liste pair_liste de sous-listes à deux éléments correspondant à deux tags voisins de la matrice tagué M.
+#    
+#    Argument: M--> matrice contenant des entiers (un élément nul correspond à un pixel blanc).
+#    '''
+#    ligne, colonne = np.shape(M)
+#    pair_liste=[]
+#    for i in range(1, ligne-1):
+#        for j in range(1,colonne-1):
+#            if M[i,j]!=0:
+#                tag=M[i,j]
+#                voisins=[ M[i,j-1], M[i-1,j-1], M[i-1,j] ]
+#                if voisins[0]!=0 and voisins[0]!=tag and [ min( tag, voisins[0] ), max( tag, voisins[0] )] not in pair_liste:
+#                    pair_liste.append( [min( tag, voisins[0] ), max( tag, voisins[0] )] )
+#                
+#                elif voisins[1]!=0 and voisins[1]!=tag and [ min( tag, voisins[1] ), max( tag, voisins[1] )] not in pair_liste:
+#                    pair_liste.append( [min( tag, voisins[1] ), max( tag, voisins[1] )] )
+#                
+#                elif voisins[2]!=0 and voisins[2]!=tag and [ min( tag, voisins[2] ), max( tag, voisins[2] )] not in pair_liste:
+#                    pair_liste.append( [min( tag, voisins[2] ), max( tag, voisins[2] )] )
+#                
+#    return pair_liste
 #
 #def rechercheDansListe(tag, TAGS, pair_liste, k=0):
 #    '''Fonction récursive qui modifie la liste TAGS et la liste pair_liste.
@@ -102,13 +102,33 @@ def ebaucheMemeTag(M):
 
 
 
-def memeTag(pair_liste, nbr_tag):
+def memeTag(M, nbr_tag):
     '''Renvoie une liste tag_liste de sous-listes. Chaque sous liste contient les tags correspondant à un même caractère de la matrice recherchée.
     
     Arguments:
-        -pair_liste: liste de sous-listes à deux éléments construite et renvoyé par ebaucheMemeTag ;
+        -M: une matriice numpy taguée;
         -nrb_tag: un entier correspondant à la valeur maximal que peut prendre un élément de la matrice.
     '''
+    ligne, colonne = np.shape(M)
+    def f(M):
+        ligne, colonne = np.shape(M)
+        pair_liste=[]
+        for i in range(1, ligne-1):
+            for j in range(1,colonne-1):
+                if M[i,j]!=0:
+                    tag=M[i,j]
+                    voisins=[ M[i,j-1], M[i-1,j-1], M[i-1,j] ]
+                    if voisins[0]!=0 and voisins[0]!=tag and [ min( tag, voisins[0] ), max( tag, voisins[0] )] not in pair_liste:
+                        pair_liste.append( [min( tag, voisins[0] ), max( tag, voisins[0] )] )
+                    
+                    elif voisins[1]!=0 and voisins[1]!=tag and [ min( tag, voisins[1] ), max( tag, voisins[1] )] not in pair_liste:
+                        pair_liste.append( [min( tag, voisins[1] ), max( tag, voisins[1] )] )
+                    
+                    elif voisins[2]!=0 and voisins[2]!=tag and [ min( tag, voisins[2] ), max( tag, voisins[2] )] not in pair_liste:
+                        pair_liste.append( [min( tag, voisins[2] ), max( tag, voisins[2] )] )   
+        return pair_liste
+    
+    pair_liste = f(M)
     tag_liste=[]
     solo_tag = [[i+1] for i in range(nbr_tag)]
     if len(pair_liste)!=0:
@@ -164,24 +184,30 @@ def matriceTague(M, tag_liste):
     return position_caracteres, nombre_pixels
 
 
-def sauvergarder_regions(image, M, position_caracteres, nom_position='regions.txt', nom_image="Charactère_", format='.jpg'):
-    fichier=open(nom_position,'w')
+def sauvegarder_regions(position_caracteres, nom_txt='regions.txt'):
+    '''
+    '''
+    fichier=open(nom_txt,'w')
     for k in range(len(position_caracteres)):
         imin, jmin = position_caracteres[k][0], position_caracteres[k][2]
-        img = image.crop((jmin-1, imin-1, position_caracteres[k][3]+1, position_caracteres[k][1]+1))
-        img.save(nom_image+str(k+1)+format)
-        img.show()
         string = str(imin)+'; '+ str(jmin)
         fichier.write(string+'\n')
     fichier.close()
 
-def afficheListeTag(image):
-    M, nbr_tag = convMatrice(image)
-    pair_liste = ebaucheMemeTag(M)
-    tag_liste = memeTag(pair_liste, nbr_tag)
-    print(tag_liste)
+def sauvegarder_images(image, position_caracteres, nom_image="Charactère_", format='.jpg'):
+    '''
+    '''
+    for k in range(len(position_caracteres)):
+        img = image.crop((position_caracteres[k][2]-1, position_caracteres[k][0]-1, position_caracteres[k][3]+1, position_caracteres[k][1]+1))
+        img.save(nom_image+str(k+1)+format)
+    
+def afficheListeTag(image, nom_txt='regions.txt', sauve_image=False, nom_image="Charactère_", format='.jpg'):
+    M, nbr_tag = image2np(image)
+    tag_liste = memeTag(M, nbr_tag)
     position_caracteres, nombre_pixels = matriceTague(M, tag_liste)
-    print(position_caracteres, nombre_pixels)
+    if sauve_image: sauvegarder_images(image, position_caracteres, nom_image, format)
+    sauvegarder_regions(position_caracteres, nom_txt)
+
 #    Matr=np.zeros((ligne, colonne), dtype=np.uint8)
 #    for i in range(ligne):
 #        for j in range(colonne):
@@ -190,10 +216,11 @@ def afficheListeTag(image):
 #    Matr=Matr*255
 #    a=Image.fromarray(Matr)
 #    a.show()
-    sauvergarder_regions(img, M, position_caracteres)
+
+
 
 #def afficheListeTag_bis(image):
-#    M=convMatrice(image)
+#    M=image2np(image)
 #    tag_liste=[]
 #    sameTag(tag_liste, ebaucheSametag(M))
 #    tag_liste[0].sort()
@@ -206,10 +233,8 @@ def afficheListeTag(image):
 ##################################################
 #                     Main                       #
 ##################################################
-f = input("\n Bonjour utilisateur. " "\n \n Entrez le nom de votre fichier et cliquez sur 'Enter': ")
-img =open(f,'r')
-img = Image.open('RKF.PNG') # The image file must exist in the same directory as the script
-img = img.convert("RGB")
+img = Image.open('aa.png') # The image file must exist in the same directory as the script
+img = img.convert('RGB')
 afficheListeTag(img) 
 #Image.fromarray()
 #img.save('')
