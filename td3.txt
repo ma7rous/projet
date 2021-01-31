@@ -1,0 +1,210 @@
+
+/**************************************************************/
+/* TD3 : Exercice : importation, boucle, fusion, macro        */
+/**************************************************************/
+
+/* options d'affichage dans les sorties */
+title;
+options nodate nonumber formchar="|----|+|---+=|-/\<>*" nocenter ls=80;
+
+/* Création de la bibliothèque pour le TD */
+libname SAS "D:\personnel\SAS\TD3";
+
+*----------------*;
+*-- Question 0 --*;
+*----------------*;
+
+/* Importer le fichier du recensement de la population en utilisant une proc import */
+
+proc import
+datafile= "D:\personnel\SAS\TD2\base_historique_rp_2015.xls"
+out = histo
+dbms=xls replace;
+sheet = "COM_2015";
+*range = "A1:DD35400";
+getnames=yes;
+run;
+
+*----------------*;
+*-- Question 1 --*;
+*----------------*;
+
+/* Supprimer les observations qui ne sont pas de la région Bourgogne-Franche-Comté */
+
+data histo2;
+set histo;
+if reg not = "27" then delete;
+* autre possibilité =>   if reg ^= "27" then delete;
+run;
+
+
+
+*----------------*;
+*-- Question 2 --*;
+*----------------*;
+
+/* Créer 4 tables pour les départements 21, 58, 71 et 89 puis les regrouper dans une table Bourgogne */
+
+data dep21;
+set histo2;
+if dep = "21" then output;
+run;
+data dep58;
+set histo2;
+if dep = "58" then output;
+run;
+data dep71;
+set histo2;
+if dep = "71" then output;
+run;
+data dep89;
+set histo2;
+if dep = "89" then output;
+run;
+data bourgogne;
+set dep21 dep58 dep71 dep89;
+run;
+
+
+
+*----------------*;
+*-- Question 3 --*;
+*----------------*;
+
+
+title "Question 3 : répartition de la superficie par bassin d'emploi";
+/* je calcule la répartition de la superficie par bassin */
+proc freq data=histo2 ;
+     table nom_bassin / out=bassins_sup;
+     weight superf;
+     run;
+data bassins_sup;
+set bassins_sup;
+drop percent;
+rename count = superficie;
+label count = "Superficie en km2";
+run;
+
+title "Question 3 bis : répartition de la population 2015 par bassin d'emploi";
+/* je calcule la répartition de la population 2015 par bassin */
+proc freq data=histo2 ;
+     table nom_bassin / out=bassins_pop15;
+     weight P15_POP;
+     run;
+data bassins_pop15;
+set bassins_pop15;
+drop percent;
+rename count = population_2015;
+label count = "Population recensement 2015";
+run;
+
+title "Question 3 ter : répartition de la population 2010 par bassin d'emploi";
+/* je calcule la répartition de la population 2010 par bassin */
+proc freq data=histo2 ;
+     table nom_bassin / out=bassins_pop10;
+     weight P10_POP;
+     run;
+data bassins_pop10;
+set bassins_pop10;
+drop percent;
+rename count = population_2010;
+label count = "Population recensement 2010";
+run;
+
+*----------------*;
+*-- Question 4 --*;
+*----------------*;
+
+/* Rassembler les 3 tables en une seule */
+
+data bassin_all;
+merge bassins_pop15 bassins_pop10 bassins_sup;
+*by nom_bassin;
+run;
+
+*----------------*;
+*-- Question 5 --*;
+*----------------*;
+
+/* Refaire la question 3 avec une macro */
+
+%macro bassin(suffixe,var,nomc);
+title "Question 3 : répartition de la &nom par bassin d'emploi";
+/* je calcule la répartition */
+proc freq data=histo2 ;
+     table nom_bassin / out=bassins_&suffixe;
+     weight &var;
+     run;
+data bassins_&suffixe;
+set bassins_&suffixe;
+drop percent;
+rename count = &nomc;
+run;
+%mend;
+%bassin(sup,superf,superficie);
+%bassin(pop15,P15_POP,population_2015);
+%bassin(pop10,P10_POP,population_2010);
+data bassin_all;
+merge bassins_pop15 bassins_pop10 bassins_sup;
+*by nom_bassin;
+run;
+
+*----------------*;
+*-- Question 6 --*;
+*----------------*;
+
+/* Refaire les questions 2 et 3 avec une macro en utilisant une boucle et la fonction scan*/
+
+%let variable = superf - P15_POP - P10_POP;
+%let nom = superficie - population_2015 - population_2010;
+%let suf = sup - pop15 - pop10;
+
+%macro bassin2();
+%do i = 1 %to 3;
+%let var = %scan(&variable,&i.,'-') ;
+%let nomc = %scan(&nom,&i.,'-') ;
+%let suffixe = %scan(&suf,&i.,'-') ;
+title "Question 2 : répartition de la &nomc par bassin d'emploi";
+/* je calcule la répartition */
+proc freq data=histo2 ;
+     table nom_bassin / out=bassins_&suffixe;
+     weight &var;
+     run;
+data bassins_&suffixe;
+set bassins_&suffixe;
+drop percent;
+rename count = &nomc;
+run;
+%end;
+data bassin_all;
+merge bassins_pop15 bassins_pop10 bassins_sup;
+run;
+%mend;
+%bassin2();
+
+*----------------*;
+*-- Question 7 --*;
+*----------------*;
+
+proc sort data=histo out=bassins(keep=nom_bassin) nodupkeys;
+by nom_bassin;
+run;
+data _null_;
+set bassins;
+call symputx(compress("bassins"!!_n_),nom_bassin);
+run;
+
+%put _user_;
+* affiche tous les paramètres;
+%put &bassins10;
+* affiche le 10ème bassin;
+%put &nom;
+
+
+title "Question 7 : le 10ème bassin est : ";
+data test;
+set bassins;
+where nom_bassin = "&bassins10";
+run;
+proc print; run;
+%put "Le 10ème bassin est :" &bassins10;
