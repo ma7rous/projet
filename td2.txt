@@ -1,0 +1,148 @@
+/**************************************************************/
+/* TD2 : Exercice 1 : importation, statistiques descriptives */
+/**************************************************************/
+/* options d'affichage dans les sorties */
+title;
+options nodate nonumber formchar="|----|+|---+=|-/\<>*" nocenter ls=80;
+/* Création de la bibliothèque pour le TD */
+libname SAS "C:\Users\ibna1320\Desktop\SAS\TD2";
+*----------------*;
+*-- Question 1 --*;
+*----------------*;
+/* ETAPE 1 A FAIRE MANUELLEMENT : IMPORTATION DE LA TABLE HISTORIQUE AVEC L'INTERFACE D'IMPORTATION DE SAS */
+/* -> ne fonctionne pas dans Linux */
+/* ETAPE 2 : Importer le fichier du recensement de la population en utilisant une proc import */
+proc import
+datafile= "C:\Desktop\SAS\TD2\base_historique_rp_2015.xls"
+out = histo
+dbms=xls replace;
+sheet = "COM_2015";
+*range = "A1:DD35400";
+getnames=yes;
+run;
+*----------------*;
+*-- Question 2 --*;
+*----------------*;
+title "Exploration de la table histo";
+proc contents data=histo position;
+run;
+proc freq data=histo nlevels;
+table _all_ /noprint;
+run;
+*----------------*;
+*-- Question 3 --*;
+*----------------*;
+title "Question 3 : Répartition selon la région, le département ";
+title2 "et les bassins d'emploi";
+proc freq data=histo;
+table reg dep code_bassin /missing;
+run;
+*----------------*;
+*-- Question 4 --*;
+*----------------*;
+title "Question 4 : Description des variables quantitatives";
+proc means data=histo;
+run;
+data superf_max;
+set histo;
+where superf = 18360;
+run;
+proc print;
+run;
+data hab_max;
+set histo;
+where P15_POP = 2206488;
+run;
+proc print;
+run;
+*----------------*;
+*-- Question 5 --*;
+*----------------*;
+/* On créé le format d'affichage qui sera utilisé pour la variable reg */
+proc format;
+value $nouvelleregion
+"11"="Ile-de-France"
+"01"-"06"="DOM/TOM"
+"27"="Bourgogne-Franche-Comté"
+"76"="Occitanie"
+"44"="Grand-Est"
+"53"="Bretagne"
+"75"="Nouvelle-Aquitaine"
+"84"="Auvergne-Rhône-Alpes"
+"93"="Provence-Alpes-Côte-d'Azur"
+"94"="Corse"
+"52"="Pays-de-la-Loire"
+"24"="Centre-Val-de-Loire"
+"28"="Normandie"
+"32"="Hauts-de-France"
+;
+run;
+title "Question 5 : répartition de la superficie par nouvelle région";
+/* j'applique mon format $nouvelleregion et j'affiche dans l'ordre du format */
+proc freq data=histo order=formatted ;
+table reg;
+weight superf;
+format reg $nouvelleregion.;
+run;
+title "Question 5 bis : répartition de la superficie par nouvelle région";
+/* j'applique mon format $nouvelleregion et j'affiche dans l'ordre du format, j'enregistre le résultat dans un fichier repartition_reg en ne conservant que les fréquences */
+proc freq data=histo order=formatted ;
+table reg / norow nocol nopercent out = repartition_reg;
+weight superf;
+format reg $nouvelleregion.;
+run;
+*----------------*;
+*-- Question 6 --*;
+*----------------*;
+data quest6;
+set histo;
+densite2015=P15_POP/superf;
+run;
+proc sort data=quest6;
+by descending densite2015;
+run;
+title "Question 6 : affichage des 20 communes les plus denses";
+proc print data=quest6(obs=20);
+var CODGEO REG densite2015;
+run;
+*----------------*;
+*-- Question 7 --*;
+*----------------*;
+title "Question 7 : Répartition du nombre d'habitants en 2010, 2015 et de la superficie par bassin d'emploi ";
+proc means data=histo noprint;
+var P15_POP P10_POP SUPERF;
+class nom_bassin;
+where reg="27";
+output out=bassins (where= (_TYPE_=1)) sum=;
+run;
+/* j'enlève les variables inutiles et je change le format d'affichage des valeurs numériques */
+data bassins;
+set bassins;
+drop _TYPE_ _FREQ_;
+superf = round(superf,1);
+densite2015 = round(P15_POP/superf,1);
+run;
+/* tri par densité décroissante */
+Proc sort; by descending densite2015; run;
+proc print; run;
+title "Question 7 bis : Affichez la médiane de la densité ";
+/* la médiane */
+proc means data=bassins noprint;
+var densite2015;
+output out=mediane (drop= _TYPE_ _FREQ_) median=;
+run;
+proc print;
+run;
+/* les statistiques descriptives principales de la table bassin */
+proc means data=bassins mean min median max;
+ods output Summary=summary_data (drop= _LABEL_);
+run;
+*----------------*;
+*-- Question 8 --*;
+*----------------*;
+/* Export de la table bassin sous format Excel */
+PROC EXPORT DATA= WORK.BASSINS
+OUTFILE= "C:\Desktop\SAS\TD2\bassins.xls"
+DBMS=xls REPLACE;
+SHEET="bassins";
+RUN;
