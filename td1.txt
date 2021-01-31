@@ -1,0 +1,126 @@
+/**************************************************************/
+/* TD1 : Exercice 2 : tests sur l'option CARDS : délimitation */
+/**************************************************************/
+/* Question 1 */
+proc setinit;
+run; /* pour connaître la version de SAS installée et les modules */
+/* Question 2 */
+data JOUEUR;
+*informat naissance mmddyy10.;
+input initiale $ 5 prenom $ 5-15 nom $ 16-24 poids 30-31 taille 33-35 matchs 37 buts 39 passes 41 distance 43-46 minutes_jouees 48-50 naissance $ 52-61;
+cards ;
+MIL N’Golo Kante FRA 68 168 7 0 0 68.5 595 29/03/1991
+ATT Kylian Mbappé FRA 73 178 7 4 0 51.9 534 20/12/1998
+MIL Thomas Lemar FRA 170 1 0 0 10.7 90 12/11/1995
+ATT Cristiano Ronaldo POR 88 190 4 4 0 35 360 05/02/1985
+DEF Jérôme Boateng ALL 93 192 2 0 0 18.1 172 03/09/1988
+ATT Antoine Griezmann FRA 71 175 7 4 2 65.6 570 21/03/1991
+ATT Philippe Coutinho BRE 68 171 5 2 2 52.2 436 12/06/1992
+MIL Luka Modric CRO 66 172 7 2 1 72.3 694 09/09/1985
+ATT Eden Hazard BEL 72 172 6 3 2 56.9 518 07/01/1991
+;
+Run;
+/* Question 4 */
+proc print;
+run;
+/* Question 5 */
+Proc contents data=JOUEUR;
+run;
+/* Question 6 */
+data JOUEUR;
+set JOUEUR;
+Run;
+TITLE 'LES JOUEURS QUE JE SUIS A LA COUPE DU MONDE 2018';
+FOOTNOTE "1er résultat de table SAS de l'année";
+Proc print data=JOUEUR;
+run;
+/* Question 7 */
+Libname disque 'E:/repertoire';
+DATA disque.Table_Joueurs_2;
+set JOUEUR;
+run;
+TITLE 'QUESTION 7';
+DATA JOUEUR;
+set JOUEUR;
+If nom = "Lemar" then poids = 58;
+run;
+proc print;
+run;
+/* Question 8 */
+TITLE 'QUESTION 8';
+DATA JOUEUR;
+set JOUEUR;
+IMC = round(poids/((taille/100)**2),.1);
+label IMC='Indice de Masse Corporelle';
+run;
+FOOTNOTE "Boateng et Lemar";
+proc sort data= JOUEUR out = IMC;
+by IMC;
+run;
+FOOTNOTE;
+data IMCBAS;
+set IMC (obs=1);
+run;
+proc print;
+run;
+TITLE 'QUESTION 8 BIS';
+data IMCHAUT;
+set IMC (firstobs=9);
+run;
+proc print;
+run;
+/* Question 9 */
+DATA JOUEUR;
+set JOUEUR;
+NP = compbl(nom||" "||prenom);
+run;
+proc print;
+run;
+/* Question 10 */
+option missing =0;
+DATA JOUEUR;
+set JOUEUR;
+ratio = minutes_jouees/buts;
+run;
+proc print;
+run;
+/* Question 11 */
+DATA SCORE;
+set JOUEUR;
+score= buts + passes;
+ratio2 = minutes_jouees/score;
+format ratio 5.1 ratio2 5.1 ;
+label NP='nom et prénom' ratio='but toutes les x minutes' ratio2='decisif toutes les x minutes';
+keep NP ratio ratio2;
+run;
+proc print label;
+run;
+/* Question 12 */
+DATA JOUEUR;
+*SET JOUEUR (RENAME(naissance=date_de_naissance));
+set JOUEUR;
+date_de_naissance=input(naissance,ddmmyy10.);
+drop naissance;
+run;
+proc print;
+run;
+/* Question 13 */
+ODS RTF FILE= "e:\joueur.doc";
+DATA JOUEUR;
+set JOUEUR;
+format date_de_naissance ddmmyy10.;
+ODS RTF CLOSE;
+Run;
+/* Question 14 */
+DATA finalistes;
+set JOUEUR;
+IF matchs = 7;
+age_j=mdy(7,15,2018)-date_de_naissance;
+age_an=yrdif(date_de_naissance,mdy(7,15,2018),"ACT/ACT");
+age=round(age_an,.5);
+run;
+proc print;
+run;
+/* la fonction YRDIF contient trois paramètres : la date de début, la date de fin et le mode de définition des mois et années.
+Dans notre cas, on choisira des mois et années comme sur le calendrier et non des mois de 30 jours ou des années de 360 jours.
+Le troisième paramètre aura donc la valeur ‘ACT/ACT’ ou son alias ‘ACTUAL’. */
