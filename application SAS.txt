@@ -1,0 +1,128 @@
+6 premières questions de l'Examen de l'an passé. 
+
+On est censé avoir deux heures, on a mis plus de temps que ça, et il en manque plein... 
+
+Question 1;
+libname EXAM "D:\Auger-Benjamin";
+
+Question 2;
+
+data EMPLOI;
+set exam.tab21 exam.tab25 exam.tab39 exam.tab58 exam.tab70 exam.tab89 exam.tab90;
+run;
+
+
+data EMPLOI;
+set EMPLOI;
+code_commune = substr(commune,1,5);
+lib_commune = substr(commune,9);
+run;
+
+
+data EMPLOI;
+set EMPLOI;
+A88 = substr(ape,1,2);
+run;
+
+data EMPLOI;
+set EMPLOI;
+code_ape = substr(ape,1,2)||substr(ape,4,3);
+run;
+
+
+data emploi_2;
+set EMPLOI;
+keep code_commune lib_commune A88 code_ape nb_etab2018 eff2017 eff2018;
+run;
+
+Question 3;
+
+proc import datafile="D:\Auger-Benjamin\Nomenclature_geo_exam.xls"
+out = exam.nomenclature
+dbms = xls replace;
+getnames = yes;
+run;
+
+proc contents data = exam.nomenclature;
+run;
+
+/Question 4 :/
+
+data emploi_3;
+merge emploi_2 exam.nomenclature;
+by code_commune;
+run;
+
+data FC_emploi;
+set emploi_3;
+where ancienne_region_insee = 43;
+run;
+La table FC_emploi a 25087 observations;
+
+data blanc;
+set FC_emploi;
+where lib_commune=" ";
+run;
+La table blanc a 302 observations;
+
+/Question 5:/
+
+proc format;
+	value $NAFA
+	"00"="Inconnu"
+	"01"-"03"="Agriculture"
+	"05"-"39"="Industrie"
+	"41"-"43"="Construction"
+	"45"-"47"="Commerce"
+	"49"-"99"="Services"
+	;
+run;
+
+data FC_emploi2;
+set FC_emploi;
+format A88 NAFA.;
+run;
+
+Question 6;
+data FC_emploi3;
+set FC_emploi;
+secteur = input(A88,$2.);
+run;
+
+Fin de la Q6 + Q7 :
+
+data FC_emploi4;
+set FC_emploi3;
+nafa5 = put(A88,NAFA.);
+run;
+
+Question 7;
+proc freq data=FC_emploi4;
+tables lib_bassin*nafa5 /list nocum noprint out=bassins_emploi;
+weight eff2017;
+run;
+
+data bassins_emploi;
+set bassins_emploi;
+drop percent;
+rename count=nb_salaries;
+run;
+
+data industrie;
+set bassins_emploi;
+where nafa5="Industrie";
+rename nb_salaries=industrie;
+label nb_salaries="Nb emploi 2017 dans le secteur industrie";
+run;
+
+proc sort data=industrie;
+by descending industrie;
+run;
+
+title "Les 5 bassins qui possèdent le plus grand effectif salarié dans l'industrie en 2017";
+footnote "Source Accoss/Urssaf 2017";
+proc print data=industrie (obs=5) noobs;
+var lib_bassin industrie;
+run;
+title;
+footnote;
