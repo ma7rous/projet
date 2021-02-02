@@ -126,3 +126,16 @@ var lib_bassin industrie;
 run;
 title;
 footnote;
+
+Question 8;
+options mprint symbolgen mlogic;
+%macro q8(secteur);
+data &secteur.;
+set bassins_emploi;
+where nafa5="&secteur.";
+rename nb_salaries=&secteur.;
+label nb_salaries="Nb emploi 2017 dans le secteur "||&secteur.;
+run;
+%mend;
+
+%q8(secteur=Construction);
